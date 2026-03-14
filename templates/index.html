@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Digital Detox Dashboard</title>
+
+<link rel="stylesheet" href="/static/style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<meta http-equiv="refresh" content="10">
+
+</head>
+
+<body>
+
+<h1>📊 Digital Detox Tracker</h1>
+<p>Monitor your daily screen usage and improve productivity</p>
+
+<a href="/logout" class="btn">Logout</a>
+
+< class="container">
+
+<!-- <div class="card">
+<h2>Productivity Score</h2>
+<p id="score">{{ score }}%</p>
+</div>
+
+<div class="card">
+<h2>AI Suggestion</h2>
+<p>{{ advice }}</p>
+</div>
+
+<div class="card">
+<h2>App Usage</h2>
+<canvas id="chart"></canvas>
+</div>
+
+<div class="card">
+<a href="/download" class="btn">Download Report</a>
+</div> -->
+
+<div class="dashboard-grid">
+
+    <!-- Card 1 -->
+    <div class="card">
+        <h3>Productivity Score</h3>
+        <p class="big-text">{{ score }}%</p>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="card">
+        <h3>AI Suggestion</h3>
+        <p>{{ advice }}</p>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="card">
+        <h3>App Usage</h3>
+        <canvas id="usageChart"></canvas>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="card">
+        <h3>Report</h3>
+        <p>Download your screen time report.</p>
+        <a href="/download" class="download-btn">Download Report</a>
+    </div>
+
+</div>
+
+</div>
+
+<script>
+
+const apps = {{ apps | tojson }};
+const times = {{ times | tojson }};
+
+</script>
+
+<script src="/static/script.js"></script>
+
+</body>
+</html>
+ 
+
+
+<!-- <!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Digital Detox Dashboard</title>
+
+<link rel="stylesheet" href="/static/style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<meta http-equiv="refresh" content="10">
+
+</head>
+
+<body>
+
+ <h1>📊 Digital Detox Tracker</h1>
+<p>Monitor your daily screen usage and improve productivity</p>
+
+<a href="/logout" class="btn">Logout</a> -->
+
+<!-- <h1>📊 Digital Detox Tracker</h1>
+<p>Monitor your daily screen usage and improve productivity</p>
+
+<a href="/logout" class="btn logout">Logout</a>
+
+<div class="container">
+
+<div class="card">
+<h2>Productivity Score</h2>
+<p id="score">{{ score }}%</p>
+</div>
+
+<div class="card">
+<h2>AI Suggestion</h2>
+<p>{{ advice }}</p>
+</div>
+
+<div class="card">
+<h2>App Usage</h2>
+<canvas id="chart"></canvas>
+</div>
+
+<div class="card">
+<a href="/download" class="btn">Download Report</a>
+</div>
+
+</div>
+
+<script>
+window.apps = {{ apps | tojson }};
+window.times = {{ times | tojson }};
+</script>
+
+<script src="/static/script.js"></script>
+
+</body>
+</html>
+
+
+<!-- <!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Digital Detox Tracker</title>
+
+<link rel="stylesheet" href="/static/style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+<h1>📊 Digital Detox Tracker</h1>
+<p>Monitor your daily screen usage and improve productivity</p>
+
+<a href="/logout" class="btn logout">Logout</a>
+
+<div class="dashboard">
+
+<div class="card">
+
+<h2>Productivity Score</h2>
+
+<p id="score">{{ score }}%</p>
+
+</div>
+
+<div class="card">
+
+<h2>AI Suggestion</h2>
+
+<p>{{ advice }}</p>
+
+</div>
+
+<div class="card">
+
+<h2>App Usage</h2>
+
+<canvas id="chart"></canvas>
+
+</div>
+
+<div class="card">
+
+<a href="/download" class="btn">Download Report</a>
+
+</div>
+
+</div>
+
+<script>
+
+window.apps = {{ apps | tojson }};
+window.times = {{ times | tojson }};
+
+</script>
+
+<script src="/static/script.js"></script>
+
+</body>
+</html> -->
+
+<!-- 
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Digital Detox Dashboard</title>
+
+<link rel="stylesheet" href="/static/style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<meta http-equiv="refresh" content="10">
+
+</head>
+
+<body>
+
+<h1>📊 Screen Time Analyzer Dashboard</h1>
+
+<div style="margin-bottom:20px;">
+<a href="/logout" class="btn">Logout</a>
+<a href="/download" class="btn">Download Report</a>
+</div>
+
+<div class="container">
+
+<div class="card">
+<h2>Productivity Score</h2>
+<p id="score">{{ score }}%</p>
+</div>
+
+<div class="card">
+<h2>AI Productivity Advice</h2>
+<p>{{ advice }}</p>
+</div>
+
+<div class="card">
+<h2>App Usage</h2>
+<canvas id="chart"></canvas>
+</div>
+
+</div>
+
+<script>
+
+const apps = {{ apps | tojson }};
+const times = {{ times | tojson }};
+
+const ctx = document.getElementById("chart");
+
+new Chart(ctx,{
+type:"bar",
+data:{
+labels:apps,
+datasets:[{
+label:"Usage Time",
+data:times,
+backgroundColor:[
+"#6366F1",
+"#22C55E",
+"#F59E0B",
+"#EF4444",
+"#06B6D4"
+]
+}]
+}
+});
+
+</script>
+
+</body>
+</html> -->
