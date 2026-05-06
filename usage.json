@@ -1,1 +1,11 @@
-{"register.html - digital-detox-dashboard - Visual Studio Code": 30, "Digital Detox Dashboard - Google Chrome": 100, "Quick settings": 810, "(8) Srilekha Paul | LinkedIn - Google Chrome": 625, "Gallery - File Explorer": 15, "(8) Featured | Srilekha Paul | LinkedIn - Google Chrome": 5, "Search": 10, "*\ud83d\ude80 Project Launch Digital Detox Das - Notepad": 20, "Word": 20, "\ud83d\ude80 Built a Digital Detox Tracker to Understand Screen Time Better - Word": 90, "Document1 - Word": 115, "Deploy Pawbit on Vercel - Google Chrome": 135, "Open": 15, "Edit your public profile | LinkedIn - Google Chrome": 70, "Notifications | LinkedIn - Google Chrome": 10, "Srilekha Paul | LinkedIn - Google Chrome": 110, "(1) Srilekha Paul | LinkedIn - Google Chrome": 85, "Srilekha Paul | Asparint Full Stack Developer - Google Chrome": 175, "New Tab - Google Chrome": 20, "vercel.com/srilekha-pauls-projects - Google Chrome": 5, "Vercel - Google Chrome": 65, "sri-portfolio - Overview \u2013 Vercel - Google Chrome": 5, "New Project - Google Chrome": 15, "New Project \u2013 Vercel - Google Chrome": 40, "srilekha-paul - Overview \u2013 Vercel - Google Chrome": 25, "Document - Google Chrome": 175, "": 5}
+{
+  "apps": [
+    { "app_name": "YouTube",   "minutes": 95 },
+    { "app_name": "Instagram", "minutes": 72 },
+    { "app_name": "Chrome",    "minutes": 65 },
+    { "app_name": "WhatsApp",  "minutes": 48 },
+    { "app_name": "Netflix",   "minutes": 40 },
+    { "app_name": "Twitter",   "minutes": 30 },
+    { "app_name": "Spotify",   "minutes": 20 }
+  ]
+}

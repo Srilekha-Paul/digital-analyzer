@@ -1,122 +1,96 @@
-<!-- <!DOCTYPE html>
-<html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<link rel="stylesheet" href="/static/style.css">
-<title>Login</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Digital Detox Tracker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </head>
-
 <body>
 
-<div class="card">
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">
+            <i class="fa-solid
+              {% if category == 'success' %} fa-circle-check
+              {% elif category == 'error'  %} fa-circle-xmark
+              {% else %}                      fa-circle-info {% endif %}">
+            </i>
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
 
-<h2>Login</h2>
+  <div class="auth-page">
+    <div class="auth-card">
 
-<form method="POST">
+      <!-- Logo -->
+      <div class="auth-logo">
+        <div class="auth-logo-icon">📊</div>
+        <h1>Digital Detox Tracker</h1>
+        <p>Monitor your screen time. Reclaim your focus.</p>
+      </div>
 
-<input type="text" name="username" placeholder="Username" required>
+      <!-- Form -->
+      <form action="{{ url_for('login') }}" method="POST" novalidate>
 
-<input type="password" name="password" placeholder="Password" required>
+        <div class="form-group">
+          <label for="username">Username</label>
+          <div class="form-input-wrapper">
+            <i class="fa-regular fa-user input-icon"></i>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              class="form-control has-icon"
+              placeholder="Enter your username"
+              autocomplete="username"
+              required
+            />
+          </div>
+        </div>
 
-<button type="submit">Login</button>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="form-input-wrapper">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="form-control has-icon"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+        </div>
 
-</form>
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top:0.5rem">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          Sign In
+        </button>
 
-<p><a href="/register">Create Account</a></p>
+      </form>
 
-</div>
+      <div class="auth-divider">
+        <hr /><span>or</span><hr />
+      </div>
 
-</body>
-</html> -->
+      <div class="auth-footer">
+        Don't have an account?
+        <a href="{{ url_for('register') }}">Create one &rarr;</a>
+      </div>
 
+    </div>
+  </div>
 
-
-
-
-
-
-
-
-
-
-
-
-<!-- <!DOCTYPE html>
-<html>
-<head>
-<title>Login</title>
-<link rel="stylesheet" href="/static/style.css">
-</head>
-
-<body class="auth-page">
-
-<div class="auth-card">
-
-<h2>Login</h2>
-
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-<div class="message">{{ messages[0] }}</div>
-{% endif %}
-{% endwith %}
-
- <form method="POST"> 
- <form method="POST" action="/login"></form>
-
-<input type="text" name="username" placeholder="Username" required>
-
-<input type="password" name="password" placeholder="Password" required>
-
-<button type="submit">Login</button>
-
-</form>
-
-<p>Don't have an account?</p>
-
-<a href="/register">Create Account</a>
-
-</div>
-
-</body>
-</html> --> 
-
-
-
-
-<!DOCTYPE html>
-<html>
-<head>
-<title>Login</title>
-<link rel="stylesheet" href="/static/style.css">
-</head>
-
-<body class="auth-page">
-
-<div class="auth-card">
-
-<h2>Login</h2>
-
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-<div class="message">{{ messages[0] }}</div>
-{% endif %}
-{% endwith %}
-
-<form method="POST" action="/login">
-
-<input type="text" name="username" placeholder="Username" required>
-
-<input type="password" name="password" placeholder="Password" required>
-
-<button type="submit">Login</button>
-
-</form>
-
-<p>Don't have an account?</p>
-
-<a href="/register">Create Account</a>
-
-</div>
-
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

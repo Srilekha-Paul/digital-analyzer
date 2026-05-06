@@ -1,39 +1,135 @@
-
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Register</title>
-<link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register — Digital Detox Tracker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </head>
+<body>
 
-<body class="auth-page">
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">
+            <i class="fa-solid
+              {% if category == 'success' %} fa-circle-check
+              {% elif category == 'error'  %} fa-circle-xmark
+              {% else %}                      fa-circle-info {% endif %}">
+            </i>
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
 
-<div class="auth-card">
+  <div class="auth-page">
+    <div class="auth-card">
 
-<h2>Create Account</h2>
+      <!-- Logo -->
+      <div class="auth-logo">
+        <div class="auth-logo-icon">📊</div>
+        <h1>Create Account</h1>
+        <p>Start your digital detox journey today.</p>
+      </div>
 
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-<div class="message">{{ messages[0] }}</div>
-{% endif %}
-{% endwith %}
+      <!-- Form -->
+      <form action="{{ url_for('register') }}" method="POST" novalidate>
 
-<form method="POST" action="/register">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <div class="form-input-wrapper">
+            <i class="fa-regular fa-user input-icon"></i>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              class="form-control has-icon"
+              placeholder="Choose a username"
+              autocomplete="username"
+              minlength="3"
+              required
+            />
+          </div>
+          <span class="form-hint">At least 3 characters.</span>
+        </div>
 
-<input type="text" name="username" placeholder="Username" required>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="form-input-wrapper">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="form-control has-icon"
+              placeholder="Create a strong password"
+              autocomplete="new-password"
+              minlength="6"
+              required
+            />
+          </div>
+          <span class="form-hint">At least 6 characters.</span>
+        </div>
 
-<input type="password" name="password" placeholder="Password" required>
+        <div class="form-group">
+          <label for="confirm_password">Confirm Password</label>
+          <div class="form-input-wrapper">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input
+              type="password"
+              id="confirm_password"
+              name="confirm_password"
+              class="form-control has-icon"
+              placeholder="Repeat your password"
+              autocomplete="new-password"
+              required
+            />
+          </div>
+        </div>
 
-<button type="submit">Register</button>
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top:0.5rem">
+          <i class="fa-solid fa-user-plus"></i>
+          Create Account
+        </button>
 
-</form>
+      </form>
 
-<p>Already have an account?</p>
+      <div class="auth-divider">
+        <hr /><span>or</span><hr />
+      </div>
 
-<a href="/login">Login</a>
+      <div class="auth-footer">
+        Already have an account?
+        <a href="{{ url_for('login') }}">&larr; Sign in</a>
+      </div>
 
-</div>
+    </div>
+  </div>
 
+  <script>
+    // Client-side password match validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+      const pw  = document.getElementById('password').value;
+      const cpw = document.getElementById('confirm_password').value;
+      if (pw !== cpw) {
+        e.preventDefault();
+        document.getElementById('confirm_password').classList.add('error');
+        const hint = document.createElement('span');
+        hint.className = 'form-error';
+        hint.textContent = 'Passwords do not match.';
+        const parent = document.getElementById('confirm_password').closest('.form-group');
+        // Remove old errors
+        parent.querySelectorAll('.form-error').forEach(n => n.remove());
+        parent.appendChild(hint);
+      }
+    });
+  </script>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

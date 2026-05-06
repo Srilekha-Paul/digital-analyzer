@@ -1,86 +1,229 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
-<title>Digital Detox Dashboard</title>
-
-<link rel="stylesheet" href="/static/style.css">
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<meta http-equiv="refresh" content="10">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Detox Tracker — Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </head>
-
 <body>
 
-<h1>📊 Digital Detox Tracker</h1>
-<p>Monitor your daily screen usage and improve productivity</p>
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">
+            <i class="fa-solid
+              {% if category == 'success' %} fa-circle-check
+              {% elif category == 'error'  %} fa-circle-xmark
+              {% else %}                      fa-circle-info {% endif %}">
+            </i>
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
 
-<a href="/logout" class="btn">Logout</a>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">
+      <span class="brand-icon">📊</span>
+      Digital Detox
+    </a>
+    <div class="navbar-actions">
+      <div class="nav-user">
+        <span class="avatar">{{ current_user.username[0].upper() }}</span>
+        {{ current_user.username }}
+      </div>
+      <a href="{{ url_for('logout') }}" class="btn btn-danger btn-sm">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        Logout
+      </a>
+    </div>
+  </nav>
 
-< class="container">
+  <!-- Main -->
+  <main class="container">
 
-<!-- <div class="card">
-<h2>Productivity Score</h2>
-<p id="score">{{ score }}%</p>
-</div>
-
-<div class="card">
-<h2>AI Suggestion</h2>
-<p>{{ advice }}</p>
-</div>
-
-<div class="card">
-<h2>App Usage</h2>
-<canvas id="chart"></canvas>
-</div>
-
-<div class="card">
-<a href="/download" class="btn">Download Report</a>
-</div> -->
-
-<div class="dashboard-grid">
-
-    <!-- Card 1 -->
-    <div class="card">
-        <h3>Productivity Score</h3>
-        <p class="big-text">{{ score }}%</p>
+    <!-- Page Header -->
+    <div class="page-header">
+      <span class="date-badge">
+        <i class="fa-regular fa-calendar"></i>
+        <span id="dateBadge">Today</span>
+      </span>
+      <h1>Your Digital Dashboard</h1>
+      <p>Monitor your screen habits and reclaim your focus.</p>
     </div>
 
-    <!-- Card 2 -->
-    <div class="card">
-        <h3>AI Suggestion</h3>
-        <p>{{ advice }}</p>
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-label">Screen Time</span>
+        <span class="stat-value cyan" id="totalScreenTime">—</span>
+        <span class="stat-sub"><i class="fa-solid fa-clock"></i> Today</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Apps Used</span>
+        <span class="stat-value" id="appCount">—</span>
+        <span class="stat-sub">Active applications</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Most Used</span>
+        <span class="stat-value" id="mostUsed" style="font-size:1.3rem">—</span>
+        <span class="stat-sub">Top app today</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Pickups</span>
+        <span class="stat-value amber" id="pickupsCount">—</span>
+        <span class="stat-sub">Phone checks</span>
+      </div>
     </div>
 
-    <!-- Card 3 -->
-    <div class="card">
-        <h3>App Usage</h3>
-        <canvas id="usageChart"></canvas>
-    </div>
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
 
-    <!-- Card 4 -->
-    <div class="card">
-        <h3>Report</h3>
-        <p>Download your screen time report.</p>
-        <a href="/download" class="download-btn">Download Report</a>
-    </div>
+      <!-- Productivity Score -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">
+            <span class="icon icon-green">🎯</span>
+            Productivity Score
+          </span>
+          <span class="card-badge" id="scoreBadge">Loading</span>
+        </div>
+        <div class="score-display">
+          <div class="score-ring-wrapper">
+            <svg width="160" height="160" viewBox="0 0 160 160">
+              <!-- Track -->
+              <circle cx="80" cy="80" r="54"
+                fill="none" stroke="rgba(255,255,255,0.06)"
+                stroke-width="14" />
+              <!-- Progress -->
+              <circle id="scoreRing" cx="80" cy="80" r="54"
+                fill="none" stroke="#00d97e"
+                stroke-width="14"
+                stroke-linecap="round"
+                stroke-dasharray="339.3"
+                stroke-dashoffset="339.3" />
+            </svg>
+            <div class="score-label">
+              <span class="score-num" id="scoreValue">0%</span>
+              <span class="score-sub-text">score</span>
+            </div>
+          </div>
 
-</div>
+          <div class="score-breakdown">
+            <div class="score-bar-item">
+              <label>Focus Time</label>
+              <div class="progress-bar">
+                <div class="progress-fill fill-green" id="focusBar" style="width:0%"></div>
+              </div>
+              <div class="progress-val" id="focusPct">0%</div>
+            </div>
+            <div class="score-bar-item">
+              <label>Breaks Taken</label>
+              <div class="progress-bar">
+                <div class="progress-fill fill-cyan" id="breaksBar" style="width:0%"></div>
+              </div>
+              <div class="progress-val" id="breaksPct">0%</div>
+            </div>
+            <div class="score-bar-item">
+              <label>Limits Met</label>
+              <div class="progress-bar">
+                <div class="progress-fill fill-amber" id="limitsBar" style="width:0%"></div>
+              </div>
+              <div class="progress-val" id="limitsPct">0%</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-</div>
+      <!-- AI Suggestions -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">
+            <span class="icon icon-purple">✨</span>
+            AI Suggestions
+          </span>
+          <button class="btn btn-ghost btn-sm"
+            onclick="loadAISuggestions()" title="Refresh">
+            <i class="fa-solid fa-rotate-right"></i>
+          </button>
+        </div>
+        <div id="aiSuggestions">
+          <div class="ai-loading">
+            <div class="spinner"></div>
+            <span>Analysing your habits…</span>
+          </div>
+        </div>
+      </div>
 
-<script>
+      <!-- App Usage -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">
+            <span class="icon icon-cyan">📱</span>
+            App Usage
+          </span>
+          <span class="card-badge badge-green">Today</span>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="usageChart"></canvas>
+        </div>
+        <div class="app-list" id="appList">
+          <!-- Populated by JS -->
+        </div>
+      </div>
 
-const apps = {{ apps | tojson }};
-const times = {{ times | tojson }};
+      <!-- Report -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">
+            <span class="icon icon-amber">📄</span>
+            Daily Report
+          </span>
+        </div>
+        <div class="report-body">
+          <div class="report-preview">
+            <div class="report-row">
+              <span>Report Date</span>
+              <span id="reportDate">—</span>
+            </div>
+            <div class="report-row">
+              <span>Total Screen Time</span>
+              <span id="reportTotal">—</span>
+            </div>
+            <div class="report-row">
+              <span>Apps Tracked</span>
+              <span id="reportApps">—</span>
+            </div>
+            <div class="report-row">
+              <span>User</span>
+              <span>{{ current_user.username }}</span>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="downloadReport()">
+            <i class="fa-solid fa-download"></i>
+            Download Report
+          </button>
+          <button class="btn btn-secondary btn-full"
+            onclick="window.location.reload()">
+            <i class="fa-solid fa-arrows-rotate"></i>
+            Refresh Data
+          </button>
+        </div>
+      </div>
 
-</script>
+    </div><!-- /.dashboard-grid -->
+  </main>
 
-<script src="/static/script.js"></script>
-
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
  
@@ -137,7 +280,7 @@ const times = {{ times | tojson }};
 </div>
 
 <script>
-window.apps = {{ apps | tojson }};
+window.apps = {{ apps | default([]) | tojson | safe }};
 window.times = {{ times | tojson }};
 </script>
 

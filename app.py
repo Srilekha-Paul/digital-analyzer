@@ -1,285 +1,213 @@
-# from flask import Flask, render_template, request, redirect, session, send_file
-# # from flask import Flask, render_template, redirect, session
-# import sqlite3
-# import json
-# import io
-# from reportlab.pdfgen import canvas
-
-# app = Flask(__name__)
-# app.secret_key = "secret123"
-
-# def get_db():
-#     return sqlite3.connect("users.db")
-
-# def productivity_advice(total):
-
-#     if total > 300:
-#         return "⚠ High screen time detected. Consider taking breaks."
-#     elif total > 200:
-#         return "Moderate usage. Try reducing social media usage."
-#     else:
-#         return "Great! Your digital usage is balanced."
-
-# @app.route("/")
-# def dashboard():
-
-#     if "user" not in session:
-#         return redirect("/login")
-
-#     try:
-#         with open("usage.json") as f:
-#             data = json.load(f)
-#     except:
-#         data = {}
-
-#     apps = list(data.keys())
-#     times = list(data.values())
-
-#     total = sum(times)
-#     advice = productivity_advice(total)
-
-#     return render_template(
-#         "index.html",
-#         apps=apps,
-#         times=times,
-#         score=72,
-#         advice=advice
-#     )
-
-# @app.route("/register", methods=["GET","POST"])
-# def register():
-
-#     if request.method == "POST":
-
-#         username = request.form["username"]
-#         password = request.form["password"]
-
-#         db = get_db()
-#         db.execute(
-#             "INSERT INTO users(username,password) VALUES(?,?)",
-#             (username,password)
-#         )
-#         db.commit()
-
-#         return redirect("/login")
-
-#     return render_template("register.html")
-
-# @app.route("/login", methods=["GET","POST"])
-# def login():
-
-#     if request.method == "POST":
-
-#         username = request.form["username"]
-#         password = request.form["password"]
-
-#         db = get_db()
-#         user = db.execute(
-#             "SELECT * FROM users WHERE username=? AND password=?",
-#             (username,password)
-#         ).fetchone()
-
-#         if user:
-#             session["user"] = username
-#             return redirect("/")
-
-#         return "Invalid Login"
-
-#     return render_template("login.html")
-
-# @app.route("/logout")
-# def logout():
-#     session.pop("user",None)
-#     return redirect("/login")
-
-# @app.route("/download")
-# def download_report():
-
-#     buffer = io.BytesIO()
-#     p = canvas.Canvas(buffer)
-
-#     p.drawString(100,800,"Digital Detox Report")
-
-#     try:
-#         with open("usage.json") as f:
-#             data = json.load(f)
-#     except:
-#         data = {}
-
-#     y = 760
-
-#     for app,time in data.items():
-#         p.drawString(100,y,f"{app} : {time} seconds")
-#         y -= 20
-
-#     p.save()
-#     buffer.seek(0)
-
-#     return send_file(
-#         buffer,
-#         as_attachment=True,
-#         download_name="report.pdf"
-#     )
-
-# if __name__ == "__main__":
-#     app.run(debug=True)
-
-
-from reportlab.pdfgen import canvas
-import io
-from flask import send_file
-from flask import Flask, render_template, request, redirect, session, flash
-import sqlite3
+from flask import (
+    Flask, render_template, request, redirect,
+    url_for, session, flash, jsonify, send_file
+)
+from functools import wraps
 import json
+import os
+import csv
+import io
+from datetime import datetime
 
+from db import init_db, get_user, create_user, user_exists
+from tracker import (
+    get_usage_data, get_productivity_score,
+    get_ai_suggestions, generate_report_csv
+)
+
+# ── App Setup ───────────────────────────────────────────────────
 app = Flask(__name__)
-app.secret_key = "secret123"
+app.secret_key = os.environ.get('SECRET_KEY', 'detox-secret-key-change-in-production')
+
+# Initialise DB on startup
+with app.app_context():
+    init_db()
 
 
-def get_db():
-    return sqlite3.connect("users.db")
+# ── Auth Helpers ────────────────────────────────────────────────
+class CurrentUser:
+    """Minimal user object stored in session."""
+    def __init__(self, data):
+        self.id       = data.get('id')
+        self.username = data.get('username', 'User')
+
+    @property
+    def is_authenticated(self):
+        return self.id is not None
 
 
-def productivity_advice(total):
-
-    if total > 300:
-        return "⚠ High screen time detected. Consider taking breaks."
-    elif total > 200:
-        return "Moderate usage. Try reducing social media usage."
-    else:
-        return "Great! Your digital usage is balanced."
+def get_current_user():
+    user_data = session.get('user')
+    if user_data:
+        return CurrentUser(user_data)
+    return None
 
 
-@app.route("/")
-def dashboard():
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('user'):
+            flash('Please log in to continue.', 'info')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated
 
-    if "user" not in session:
-        return redirect("/login")
 
-    try:
-        with open("usage.json") as f:
-            data = json.load(f)
-    except:
-        data = {}
+# ── Routes ──────────────────────────────────────────────────────
 
-    apps = list(data.keys())
-    times = list(data.values())
+@app.route('/')
+@login_required
+def index():
+    current_user = get_current_user()
 
-    total = sum(times)
-    score = max(0, 100 - total // 10)
-
-    advice = productivity_advice(total)
+    # Fetch usage so we can pass serialisable lists to the template.
+    # This fixes: TypeError: Object of type Undefined is not JSON serializable
+    # if the old index.html uses  {{ times | tojson }}  or  {{ apps | tojson }}
+    usage_data = get_usage_data(current_user.id)
+    apps  = [a['name']    for a in usage_data.get('apps', [])]
+    times = [a['minutes'] for a in usage_data.get('apps', [])]
 
     return render_template(
-        "index.html",
-        apps=apps,
-        times=times,
-        score=score,
-        advice=advice
+        'index.html',
+        current_user=current_user,
+        apps=apps,       # list[str]   – app names
+        times=times,     # list[float] – minutes per app  ← fixes the error
+        usage=usage_data,
     )
 
 
-@app.route("/register", methods=["GET", "POST"])
-def register():
-
-    if request.method == "POST":
-
-        username = request.form["username"]
-        password = request.form["password"]
-
-        db = get_db()
-        db.execute(
-            "INSERT INTO users (username,password) VALUES (?,?)",
-            (username, password)
-        )
-        db.commit()
-
-        flash("Registration successful! Please login.")
-        return redirect("/login")
-
-    return render_template("register.html")
-
-
-@app.route("/login", methods=["GET", "POST"])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    if session.get('user'):
+        return redirect(url_for('index'))
 
-    if request.method == "POST":
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
 
-        username = request.form["username"]
-        password = request.form["password"]
+        if not username or not password:
+            flash('Please fill in all fields.', 'error')
+            return redirect(url_for('login'))
 
-        db = get_db()
-
-        user = db.execute(
-            "SELECT * FROM users WHERE username=? AND password=?",
-            (username, password)
-        ).fetchone()
-
+        user = get_user(username, password)
         if user:
-            session["user"] = username
-            flash("Welcome to Digital Detox Tracker!")
-            return redirect("/")
+            session['user'] = {'id': user['id'], 'username': user['username']}
+            flash(f'Welcome back, {user["username"]}! 👋', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid username or password.', 'error')
+            return redirect(url_for('login'))
 
-        flash("Invalid username or password")
-
-    return render_template("login.html")
+    return render_template('login.html')
 
 
-@app.route("/logout")
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if session.get('user'):
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        username         = request.form.get('username', '').strip()
+        password         = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+
+        # Validation
+        if not username or not password:
+            flash('Please fill in all fields.', 'error')
+            return redirect(url_for('register'))
+
+        if len(username) < 3:
+            flash('Username must be at least 3 characters.', 'error')
+            return redirect(url_for('register'))
+
+        if len(password) < 6:
+            flash('Password must be at least 6 characters.', 'error')
+            return redirect(url_for('register'))
+
+        if password != confirm_password:
+            flash('Passwords do not match.', 'error')
+            return redirect(url_for('register'))
+
+        if user_exists(username):
+            flash('Username already taken. Try another.', 'error')
+            return redirect(url_for('register'))
+
+        user = create_user(username, password)
+        session['user'] = {'id': user['id'], 'username': user['username']}
+        flash('Account created successfully! 🎉', 'success')
+        return redirect(url_for('index'))
+
+    return render_template('register.html')
+
+
+@app.route('/logout')
 def logout():
+    session.pop('user', None)
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('login'))
 
-    session.pop("user", None)
-    return redirect("/login")
+
+# ── API Endpoints ────────────────────────────────────────────────
+
+@app.route('/api/usage')
+@login_required
+def api_usage():
+    """Return today's app usage data as JSON."""
+    user_id = session['user']['id']
+    data = get_usage_data(user_id)
+    return jsonify(data)
 
 
-# DOWNLOAD REPORT ROUTE
-@app.route("/download")
+@app.route('/api/score')
+@login_required
+def api_score():
+    """Return productivity score breakdown as JSON."""
+    user_id = session['user']['id']
+    score = get_productivity_score(user_id)
+    return jsonify(score)
+
+
+@app.route('/api/suggestions')
+@login_required
+def api_suggestions():
+    """Return AI-generated suggestions as JSON."""
+    user_id = session['user']['id']
+    suggestions = get_ai_suggestions(user_id)
+    return jsonify({'suggestions': suggestions})
+
+
+@app.route('/download_report')
+@login_required
 def download_report():
+    """Stream a CSV report for the current user."""
+    user      = get_current_user()
+    user_id   = user.id
+    csv_data  = generate_report_csv(user_id, user.username)
+    filename  = f"detox_report_{datetime.now().strftime('%Y%m%d')}.csv"
 
-    if "user" not in session:
-        return redirect("/login")
-
-    try:
-        with open("usage.json") as f:
-            data = json.load(f)
-    except:
-        data = {}
-
-    buffer = io.BytesIO()
-    pdf = canvas.Canvas(buffer)
-
-    pdf.setFont("Helvetica-Bold", 18)
-    pdf.drawCentredString(300, 800, "Digital Detox Report")
-
-    pdf.setFont("Helvetica", 12)
-
-    y = 750
-
-    for app, time in data.items():
-
-        # shorten very long titles
-        if len(app) > 40:
-            app = app[:40] + "..."
-
-        text = f"{app} : {time} seconds"
-
-        pdf.drawString(80, y, text)
-
-        y -= 25
-
-        if y < 100:   # new page if needed
-            pdf.showPage()
-            y = 750
-
-    pdf.save()
-
-    buffer.seek(0)
-
+    buf = io.BytesIO(csv_data.encode('utf-8'))
+    buf.seek(0)
     return send_file(
-        buffer,
+        buf,
         as_attachment=True,
-        download_name="digital_detox_report.pdf",
-        mimetype="application/pdf"
+        download_name=filename,
+        mimetype='text/csv'
     )
-if __name__ == "__main__":
-    app.run(debug=True)
+
+
+# ── Error Handlers ───────────────────────────────────────────────
+
+@app.errorhandler(404)
+def not_found(e):
+    return render_template('login.html'), 404  # Redirect to login on 404
+
+
+@app.errorhandler(500)
+def server_error(e):
+    return jsonify({'error': 'Internal server error'}), 500
+
+
+# ── Run ──────────────────────────────────────────────────────────
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
